@@ -346,17 +346,58 @@ void Editor::export_batch(string fname) {
     }
 
     int sprite = file.curSprite;
+
+    // Determinar o maior tamanho de sprite
+    int maxWidth = 0, maxHeight = 0;
+    for (const JspFrame& frame : file.jsp.frames) {
+        if (frame.surface->w > maxWidth) maxWidth = frame.surface->w;
+        if (frame.surface->h > maxHeight) maxHeight = frame.surface->h;
+    }
+
+    // Definir o tamanho do canvas como 3x o maior sprite
+    const int CANVAS_WIDTH = maxWidth * 3;
+    const int CANVAS_HEIGHT = maxHeight * 3;
+
     for (file.curSprite = 0; file.curSprite < file.jsp.frames.size(); ++file.curSprite) {
         std::ostringstream s;
         s << fname << file.curSprite << ".png";
         string name = s.str();
-        if (!export_frame(name, true)) {
-            dialog::error("Batch export failed on file:", name.c_str());
-            break;
+
+        // Obter o frame atual
+        JspFrame& frame = file.jsp.frames[file.curSprite];
+        SDL_Surface* originalSurface = frame.surface.get();
+
+        // Criar o canvas fixo
+        SDL_Surface* canvas = SDL_CreateRGBSurfaceWithFormat(0, CANVAS_WIDTH, CANVAS_HEIGHT, 32, SDL_PIXELFORMAT_ABGR8888);
+        if (!canvas) {
+            dialog::error("Failed to create canvas for:", name.c_str());
+            continue;
         }
+
+        // Calcular as posições para centralizar o sprite no canvas
+        int offsetX = (CANVAS_WIDTH - originalSurface->w) / 2;
+        int offsetY = CANVAS_HEIGHT - originalSurface->h;
+
+        // Copiar o sprite original para o canvas
+        SDL_Rect destRect = { offsetX, offsetY, originalSurface->w, originalSurface->h };
+        SDL_BlitSurface(originalSurface, nullptr, canvas, &destRect);
+
+        // Atualizar a origem do frame
+        frame.ofsX = CANVAS_WIDTH / 2;
+        frame.ofsY = CANVAS_HEIGHT;
+
+        // Salvar o canvas como PNG
+        if (IMG_SavePNG(canvas, name.c_str())) {
+            dialog::error("Failed to export frame:", name.c_str());
+        }
+
+        // Liberar o canvas
+        SDL_FreeSurface(canvas);
     }
+
     file.curSprite = sprite;
 }
+
 
 /****************************************************************/
 /* View manipulation */
