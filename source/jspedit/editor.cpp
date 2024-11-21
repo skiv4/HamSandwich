@@ -338,7 +338,6 @@ void Editor::export_batch(string fname) {
     if (files.empty()) return;
     FileInfo& file = files[curFile];
 
-    // Ajustar o nome do arquivo para exportação
     if (fname.substr(fname.length() - 4) == ".png") {
         fname.resize(fname.length() - 4);
     }
@@ -375,15 +374,15 @@ void Editor::export_batch(string fname) {
             continue;
         }
 
-        // Calcular as posições para centralizar o sprite no canvas
-        int offsetX = (CANVAS_WIDTH - originalSurface->w) / 2;
-        int offsetY = CANVAS_HEIGHT - originalSurface->h;
+        // Calcular a posição correta considerando o ponto de origem
+        int offsetX = (CANVAS_WIDTH / 2) - frame.ofsX;
+        int offsetY = (CANVAS_HEIGHT - frame.ofsY) - originalSurface->h;
 
         // Copiar o sprite original para o canvas
         SDL_Rect destRect = { offsetX, offsetY, originalSurface->w, originalSurface->h };
         SDL_BlitSurface(originalSurface, nullptr, canvas, &destRect);
 
-        // Atualizar a origem do frame
+        // Atualizar o ponto de origem no canvas
         frame.ofsX = CANVAS_WIDTH / 2;  // Centro do canvas em X
         frame.ofsY = CANVAS_HEIGHT;    // Base do canvas em Y
 
