@@ -338,14 +338,13 @@ void Editor::export_batch(string fname) {
     if (files.empty()) return;
     FileInfo& file = files[curFile];
 
+    // Ajustar o nome do arquivo para exportação
     if (fname.substr(fname.length() - 4) == ".png") {
         fname.resize(fname.length() - 4);
     }
     if (fname.back() == '0') {
         fname.resize(fname.length() - 1);
     }
-
-    int sprite = file.curSprite;
 
     // Determinar o maior tamanho de sprite
     int maxWidth = 0, maxHeight = 0;
@@ -354,9 +353,11 @@ void Editor::export_batch(string fname) {
         if (frame.surface->h > maxHeight) maxHeight = frame.surface->h;
     }
 
-    // Definir o tamanho do canvas como 3x o maior sprite
-    const int CANVAS_WIDTH = maxWidth * 3;
-    const int CANVAS_HEIGHT = maxHeight * 3;
+    // Definir o tamanho do canvas baseado no maior sprite
+    const int CANVAS_WIDTH = maxWidth;
+    const int CANVAS_HEIGHT = maxHeight;
+
+    int sprite = file.curSprite;
 
     for (file.curSprite = 0; file.curSprite < file.jsp.frames.size(); ++file.curSprite) {
         std::ostringstream s;
@@ -367,7 +368,7 @@ void Editor::export_batch(string fname) {
         JspFrame& frame = file.jsp.frames[file.curSprite];
         SDL_Surface* originalSurface = frame.surface.get();
 
-        // Criar o canvas fixo
+        // Criar o canvas fixo com tamanho do maior sprite
         SDL_Surface* canvas = SDL_CreateRGBSurfaceWithFormat(0, CANVAS_WIDTH, CANVAS_HEIGHT, 32, SDL_PIXELFORMAT_ABGR8888);
         if (!canvas) {
             dialog::error("Failed to create canvas for:", name.c_str());
@@ -383,8 +384,8 @@ void Editor::export_batch(string fname) {
         SDL_BlitSurface(originalSurface, nullptr, canvas, &destRect);
 
         // Atualizar a origem do frame
-        frame.ofsX = CANVAS_WIDTH / 2;
-        frame.ofsY = CANVAS_HEIGHT;
+        frame.ofsX = CANVAS_WIDTH / 2;  // Centro do canvas em X
+        frame.ofsY = CANVAS_HEIGHT;    // Base do canvas em Y
 
         // Salvar o canvas como PNG
         if (IMG_SavePNG(canvas, name.c_str())) {
@@ -397,6 +398,7 @@ void Editor::export_batch(string fname) {
 
     file.curSprite = sprite;
 }
+
 
 
 /****************************************************************/
