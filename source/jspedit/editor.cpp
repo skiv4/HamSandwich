@@ -367,9 +367,18 @@ void Editor::export_batch(string fname) {
             continue;
         }
 
+        // Depuração: Fundo vermelho no canvas
+        SDL_FillRect(canvas, NULL, SDL_MapRGB(canvas->format, 255, 0, 0)); // Fundo vermelho
+
         // Calcular o deslocamento do sprite no canvas
         int offsetX = (CANVAS_WIDTH / 2) - frame.ofsX;
         int offsetY = (CANVAS_HEIGHT - frame.ofsY) + originalSurface->h;
+
+        // Validar offsets (evitar valores negativos)
+        if (offsetX < 0) offsetX = 0;
+        if (offsetY < 0) offsetY = 0;
+
+        printf("OffsetX: %d, OffsetY: %d\n", offsetX, offsetY); // Log para depuração
 
         // Copiar o sprite original para o canvas
         SDL_Rect destRect = { offsetX, offsetY, originalSurface->w, originalSurface->h };
