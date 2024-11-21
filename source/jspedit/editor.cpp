@@ -345,6 +345,10 @@ void Editor::export_batch(string fname) {
         fname.resize(fname.length() - 1);
     }
 
+    // Definir tamanho fixo do canvas
+    const int CANVAS_WIDTH = 300;
+    const int CANVAS_HEIGHT = 300;
+
     int sprite = file.curSprite;
 
     for (file.curSprite = 0; file.curSprite < file.jsp.frames.size(); ++file.curSprite) {
@@ -356,28 +360,30 @@ void Editor::export_batch(string fname) {
         JspFrame& frame = file.jsp.frames[file.curSprite];
         SDL_Surface* originalSurface = frame.surface.get();
 
-        // Definir o tamanho da imagem exportada baseado no tamanho do sprite
-        const int IMAGE_WIDTH = originalSurface->w;
-        const int IMAGE_HEIGHT = originalSurface->h;
-
-        // Criar um canvas do mesmo tamanho do sprite
-        SDL_Surface* canvas = SDL_CreateRGBSurfaceWithFormat(0, IMAGE_WIDTH, IMAGE_HEIGHT, 32, SDL_PIXELFORMAT_ABGR8888);
+        // Criar o canvas fixo de 300x300
+        SDL_Surface* canvas = SDL_CreateRGBSurfaceWithFormat(0, CANVAS_WIDTH, CANVAS_HEIGHT, 32, SDL_PIXELFORMAT_ABGR8888);
         if (!canvas) {
             dialog::error("Failed to create canvas for:", name.c_str());
             continue;
         }
 
-        // Calcular a posição para centralizar o sprite no canvas
-        int offsetX = 0; // Nenhum deslocamento necessário, já que o canvas é do mesmo tamanho do sprite
-        int offsetY = 0;
+        // Calcular o deslocamento do sprite no canvas
+        int offsetX = (CANVAS_WIDTH / 2) - frame.ofsX;
+        int offsetY = (CANVAS_HEIGHT - frame.ofsY) - originalSurface->h;
+
+        // Garantir que o sprite seja centralizado corretamente
+        // Ajustar se o offsetY deixar o sprite cortado
+        if (offsetY < 0) {
+            offsetY = 0; // Evita corte para sprites muito grandes
+        }
 
         // Copiar o sprite original para o canvas
         SDL_Rect destRect = { offsetX, offsetY, originalSurface->w, originalSurface->h };
         SDL_BlitSurface(originalSurface, nullptr, canvas, &destRect);
 
-        // Atualizar o ponto de origem para o centro da imagem
-        frame.ofsX = IMAGE_WIDTH / 2;  // Centro horizontal da imagem
-        frame.ofsY = IMAGE_HEIGHT / 2; // Centro vertical da imagem
+        // Atualizar o ponto de origem no canvas
+        frame.ofsX = CANVAS_WIDTH / 2;  // Centro do canvas em X
+        frame.ofsY = CANVAS_HEIGHT;    // Base do canvas em Y
 
         // Salvar o canvas como PNG
         if (IMG_SavePNG(canvas, name.c_str())) {
