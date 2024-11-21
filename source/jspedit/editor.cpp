@@ -345,17 +345,6 @@ void Editor::export_batch(string fname) {
         fname.resize(fname.length() - 1);
     }
 
-    // Determinar o maior tamanho de sprite
-    int maxWidth = 0, maxHeight = 0;
-    for (const JspFrame& frame : file.jsp.frames) {
-        if (frame.surface->w > maxWidth) maxWidth = frame.surface->w;
-        if (frame.surface->h > maxHeight) maxHeight = frame.surface->h;
-    }
-
-    // Definir o tamanho do canvas baseado no maior sprite
-    const int CANVAS_WIDTH = maxWidth;
-    const int CANVAS_HEIGHT = maxHeight;
-
     int sprite = file.curSprite;
 
     for (file.curSprite = 0; file.curSprite < file.jsp.frames.size(); ++file.curSprite) {
@@ -367,24 +356,28 @@ void Editor::export_batch(string fname) {
         JspFrame& frame = file.jsp.frames[file.curSprite];
         SDL_Surface* originalSurface = frame.surface.get();
 
-        // Criar o canvas fixo com tamanho do maior sprite
-        SDL_Surface* canvas = SDL_CreateRGBSurfaceWithFormat(0, CANVAS_WIDTH, CANVAS_HEIGHT, 32, SDL_PIXELFORMAT_ABGR8888);
+        // Definir o tamanho da imagem exportada baseado no tamanho do sprite
+        const int IMAGE_WIDTH = originalSurface->w;
+        const int IMAGE_HEIGHT = originalSurface->h;
+
+        // Criar um canvas do mesmo tamanho do sprite
+        SDL_Surface* canvas = SDL_CreateRGBSurfaceWithFormat(0, IMAGE_WIDTH, IMAGE_HEIGHT, 32, SDL_PIXELFORMAT_ABGR8888);
         if (!canvas) {
             dialog::error("Failed to create canvas for:", name.c_str());
             continue;
         }
 
-        // Calcular a posição correta considerando o ponto de origem
-        int offsetX = (CANVAS_WIDTH / 2) - frame.ofsX;
-        int offsetY = (CANVAS_HEIGHT - frame.ofsY) - originalSurface->h;
+        // Calcular a posição para centralizar o sprite no canvas
+        int offsetX = 0; // Nenhum deslocamento necessário, já que o canvas é do mesmo tamanho do sprite
+        int offsetY = 0;
 
         // Copiar o sprite original para o canvas
         SDL_Rect destRect = { offsetX, offsetY, originalSurface->w, originalSurface->h };
         SDL_BlitSurface(originalSurface, nullptr, canvas, &destRect);
 
-        // Atualizar o ponto de origem no canvas
-        frame.ofsX = CANVAS_WIDTH / 2;  // Centro do canvas em X
-        frame.ofsY = CANVAS_HEIGHT;    // Base do canvas em Y
+        // Atualizar o ponto de origem para o centro da imagem
+        frame.ofsX = IMAGE_WIDTH / 2;  // Centro horizontal da imagem
+        frame.ofsY = IMAGE_HEIGHT / 2; // Centro vertical da imagem
 
         // Salvar o canvas como PNG
         if (IMG_SavePNG(canvas, name.c_str())) {
