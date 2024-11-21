@@ -346,8 +346,8 @@ void Editor::export_batch(string fname) {
     }
 
     // Definir tamanho fixo do canvas
-    const int CANVAS_WIDTH = 300;
-    const int CANVAS_HEIGHT = 300;
+    const int CANVAS_WIDTH = 200;
+    const int CANVAS_HEIGHT = 200;
 
     int sprite = file.curSprite;
 
@@ -360,7 +360,7 @@ void Editor::export_batch(string fname) {
         JspFrame& frame = file.jsp.frames[file.curSprite];
         SDL_Surface* originalSurface = frame.surface.get();
 
-        // Criar o canvas fixo de 300x300
+        // Criar o canvas fixo de 200x200
         SDL_Surface* canvas = SDL_CreateRGBSurfaceWithFormat(0, CANVAS_WIDTH, CANVAS_HEIGHT, 32, SDL_PIXELFORMAT_ABGR8888);
         if (!canvas) {
             dialog::error("Failed to create canvas for:", name.c_str());
@@ -369,13 +369,7 @@ void Editor::export_batch(string fname) {
 
         // Calcular o deslocamento do sprite no canvas
         int offsetX = (CANVAS_WIDTH / 2) - frame.ofsX;
-        int offsetY = (CANVAS_HEIGHT - frame.ofsY) - originalSurface->h;
-
-        // Garantir que o sprite seja centralizado corretamente
-        // Ajustar se o offsetY deixar o sprite cortado
-        if (offsetY < 0) {
-            offsetY = 0; // Evita corte para sprites muito grandes
-        }
+        int offsetY = (CANVAS_HEIGHT - frame.ofsY) + originalSurface->h;
 
         // Copiar o sprite original para o canvas
         SDL_Rect destRect = { offsetX, offsetY, originalSurface->w, originalSurface->h };
@@ -396,6 +390,7 @@ void Editor::export_batch(string fname) {
 
     file.curSprite = sprite;
 }
+
 
 
 
