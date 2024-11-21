@@ -369,7 +369,10 @@ void Editor::export_batch(string fname) {
 
         // Calcular a posição correta considerando o ponto de origem
         int offsetX = (CANVAS_WIDTH / 2) - frame.ofsX;
-        int offsetY = (CANVAS_HEIGHT - frame.ofsY);
+        int offsetY = (CANVAS_HEIGHT - frame.ofsY) - originalSurface->h;
+
+        // Ajustar offsetY para evitar cortes
+        if (offsetY < 0) offsetY = 0;
 
         // Copiar o sprite original para o canvas
         SDL_Rect destRect = { offsetX, offsetY, originalSurface->w, originalSurface->h };
